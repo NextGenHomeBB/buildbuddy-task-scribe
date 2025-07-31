@@ -220,7 +220,7 @@ export default function Settings() {
                   Manage Availability
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+              <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
                 <DialogHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -249,13 +249,13 @@ export default function Settings() {
                 ) : (
                   <>
                     {/* Weekly Calendar Grid */}
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       {availability.map((day) => {
                         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                         const dayName = dayNames[day.day_of_week];
                         
                         return (
-                          <div key={day.day_of_week} className="border rounded-lg p-4 space-y-3">
+                          <div key={day.day_of_week} className="border rounded-lg p-3 sm:p-4 space-y-3">
                             <div className="flex items-center justify-between">
                               <Label className="font-medium">{dayName}</Label>
                               <Switch
@@ -268,7 +268,7 @@ export default function Settings() {
                             </div>
                             
                             {day.is_available && (
-                              <div className="grid grid-cols-3 gap-2">
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                                 <div>
                                   <Label className="text-xs text-muted-foreground">Start Time</Label>
                                   <Input
@@ -325,7 +325,7 @@ export default function Settings() {
 
                     {/* Action Buttons */}
                     {isEditingAvailability && (
-                      <div className="flex gap-2 mt-4">
+                      <div className="flex flex-col sm:flex-row gap-2 mt-4">
                         <Button 
                           onClick={async () => {
                             const success = await saveAvailability();
