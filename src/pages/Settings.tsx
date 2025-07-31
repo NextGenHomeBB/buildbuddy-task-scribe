@@ -255,7 +255,7 @@ export default function Settings() {
                         const dayName = dayNames[day.day_of_week];
                         
                         return (
-                          <div key={day.day_of_week} className="border rounded-lg p-3 sm:p-4 space-y-3">
+                          <div key={day.day_of_week} className="border rounded-lg p-3 sm:p-4">
                             <div className="flex items-center justify-between">
                               <Label className="font-medium">{dayName}</Label>
                               <Switch
@@ -266,50 +266,6 @@ export default function Settings() {
                                 disabled={!isEditingAvailability}
                               />
                             </div>
-                            
-                            {day.is_available && (
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-                                <div>
-                                  <Label className="text-xs text-muted-foreground">Start Time</Label>
-                                  <Input
-                                    type="time"
-                                    value={day.start_time}
-                                    onChange={(e) => 
-                                      isEditingAvailability && updateDayAvailability(day.day_of_week, { start_time: e.target.value })
-                                    }
-                                    disabled={!isEditingAvailability}
-                                    className="text-sm"
-                                  />
-                                </div>
-                                <div>
-                                  <Label className="text-xs text-muted-foreground">End Time</Label>
-                                  <Input
-                                    type="time"
-                                    value={day.end_time}
-                                    onChange={(e) => 
-                                      isEditingAvailability && updateDayAvailability(day.day_of_week, { end_time: e.target.value })
-                                    }
-                                    disabled={!isEditingAvailability}
-                                    className="text-sm"
-                                  />
-                                </div>
-                                <div>
-                                  <Label className="text-xs text-muted-foreground">Max Hours</Label>
-                                  <Input
-                                    type="number"
-                                    min="1"
-                                    max="24"
-                                    step="0.5"
-                                    value={day.max_hours}
-                                    onChange={(e) => 
-                                      isEditingAvailability && updateDayAvailability(day.day_of_week, { max_hours: parseFloat(e.target.value) || 0 })
-                                    }
-                                    disabled={!isEditingAvailability}
-                                    className="text-sm"
-                                  />
-                                </div>
-                              </div>
-                            )}
                           </div>
                         );
                       })}
