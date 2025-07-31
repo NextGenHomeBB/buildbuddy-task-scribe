@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
-import { Bell, Moon, Globe, Shield, HelpCircle, Download, Clock } from 'lucide-react'
+import { Bell, Moon, Globe, Shield, HelpCircle, Download, Clock, Calendar } from 'lucide-react'
 
 export default function Settings() {
   const navigate = useNavigate()
@@ -176,6 +176,32 @@ export default function Settings() {
             >
               <Download className="w-4 h-4 mr-2" />
               {isDownloading ? 'Preparing Download...' : 'Download Shift Hours Statement'}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Availability */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Availability
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">Weekly Availability</div>
+                <div className="text-sm text-muted-foreground">Set your working hours and availability</div>
+              </div>
+            </div>
+            <Button 
+              onClick={() => navigate('/profile')}
+              className="w-full justify-start"
+              variant="outline"
+            >
+              <Calendar className="w-4 h-4 mr-2" />
+              Manage Availability
             </Button>
           </CardContent>
         </Card>
