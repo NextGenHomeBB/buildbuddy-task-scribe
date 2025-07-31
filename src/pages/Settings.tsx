@@ -9,8 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
-import { Bell, Moon, Globe, Shield, HelpCircle, Download, Clock, Calendar } from 'lucide-react'
+import { useWorkerAvailability } from '@/hooks/useWorkerAvailability'
+import { Bell, Moon, Globe, Shield, HelpCircle, Download, Clock, Calendar, Edit } from 'lucide-react'
 
 export default function Settings() {
   const navigate = useNavigate()
@@ -19,6 +22,17 @@ export default function Settings() {
   const { t } = useTranslation()
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage()
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isEditingAvailability, setIsEditingAvailability] = useState(false)
+
+  const {
+    availability,
+    isLoading: availabilityLoading,
+    isSaving: availabilitySaving,
+    updateDayAvailability,
+    saveAvailability,
+    resetToDefaults,
+    getTotalWeeklyHours
+  } = useWorkerAvailability()
 
   const downloadTimeSheetStatement = async () => {
     if (!user) return
@@ -183,26 +197,135 @@ export default function Settings() {
         {/* Availability */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Availability
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium">Weekly Availability</div>
-                <div className="text-sm text-muted-foreground">Set your working hours and availability</div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                <CardTitle>Weekly Availability</CardTitle>
               </div>
+              {!isEditingAvailability && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setIsEditingAvailability(true)}
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+              )}
             </div>
-            <Button 
-              onClick={() => navigate('/profile')}
-              className="w-full justify-start"
-              variant="outline"
-            >
-              <Calendar className="w-4 h-4 mr-2" />
-              Manage Availability
-            </Button>
+            <p className="text-sm text-muted-foreground">
+              Set your weekly availability and maximum hours per day
+            </p>
+          </CardHeader>
+          <CardContent>
+            {availabilityLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <>
+                {/* Weekly Calendar Grid */}
+                <div className="space-y-4">
+                  {availability.map((day) => {
+                    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                    const dayName = dayNames[day.day_of_week];
+                    
+                    return (
+                      <div key={day.day_of_week} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="font-medium">{dayName}</Label>
+                          <Switch
+                            checked={day.is_available}
+                            onCheckedChange={(checked) => 
+                              isEditingAvailability && updateDayAvailability(day.day_of_week, { is_available: checked })
+                            }
+                            disabled={!isEditingAvailability}
+                          />
+                        </div>
+                        
+                        {day.is_available && (
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Start Time</Label>
+                              <Input
+                                type="time"
+                                value={day.start_time}
+                                onChange={(e) => 
+                                  isEditingAvailability && updateDayAvailability(day.day_of_week, { start_time: e.target.value })
+                                }
+                                disabled={!isEditingAvailability}
+                                className="text-sm"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs text-muted-foreground">End Time</Label>
+                              <Input
+                                type="time"
+                                value={day.end_time}
+                                onChange={(e) => 
+                                  isEditingAvailability && updateDayAvailability(day.day_of_week, { end_time: e.target.value })
+                                }
+                                disabled={!isEditingAvailability}
+                                className="text-sm"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Max Hours</Label>
+                              <Input
+                                type="number"
+                                min="1"
+                                max="24"
+                                step="0.5"
+                                value={day.max_hours}
+                                onChange={(e) => 
+                                  isEditingAvailability && updateDayAvailability(day.day_of_week, { max_hours: parseFloat(e.target.value) || 0 })
+                                }
+                                disabled={!isEditingAvailability}
+                                className="text-sm"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Summary */}
+                <div className="mt-4 p-3 bg-muted rounded-lg">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">Total weekly hours:</span>
+                    <span className="font-medium">{getTotalWeeklyHours()} hours</span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                {isEditingAvailability && (
+                  <div className="flex gap-2 mt-4">
+                    <Button 
+                      onClick={async () => {
+                        const success = await saveAvailability();
+                        if (success) {
+                          setIsEditingAvailability(false);
+                        }
+                      }}
+                      disabled={availabilitySaving}
+                      className="flex-1"
+                    >
+                      {availabilitySaving ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setIsEditingAvailability(false);
+                      }}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
 

@@ -11,11 +11,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from '@/components/ui/label';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { ImageCropper } from '@/components/ImageCropper';
-import { User, Mail, Calendar, Building, Edit, Save, X, Camera, Upload, Briefcase, Clock } from 'lucide-react';
+import { User, Mail, Calendar, Building, Edit, Save, X, Camera, Upload, Briefcase } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { useWorkerAvailability } from '@/hooks/useWorkerAvailability';
+;
 import { profileValidationSchema, sanitizeText } from '@/lib/security';
 import { useAuth } from '@/contexts/AuthContext';
 export default function Profile() {
@@ -28,15 +28,6 @@ export default function Profile() {
   const {
     toast
   } = useToast();
-  const {
-    availability,
-    isLoading: availabilityLoading,
-    isSaving: availabilitySaving,
-    updateDayAvailability,
-    saveAvailability,
-    resetToDefaults,
-    getTotalWeeklyHours,
-  } = useWorkerAvailability();
   const [isEditing, setIsEditing] = useState(false);
   const [fullName, setFullName] = useState('');
   const [selectedRoles, setSelectedRoles] = useState<string[]>(['Construction Worker']);
@@ -47,7 +38,6 @@ export default function Profile() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [cropperOpen, setCropperOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState('');
-  const [isEditingAvailability, setIsEditingAvailability] = useState(false);
 
   const predefinedRoles = [
     t('roles.constructionWorker'),
@@ -477,147 +467,6 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {/* Availability */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                <CardTitle>Weekly Availability</CardTitle>
-              </div>
-              {!isEditingAvailability && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setIsEditingAvailability(true)}
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Set your weekly availability and maximum hours per day
-            </p>
-          </CardHeader>
-          <CardContent>
-            {availabilityLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : (
-              <>
-                {/* Weekly Calendar Grid */}
-                <div className="space-y-4">
-                  {availability.map((day) => {
-                    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                    const dayName = dayNames[day.day_of_week];
-                    
-                    return (
-                      <div key={day.day_of_week} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Label className="font-medium">{dayName}</Label>
-                          <Switch
-                            checked={day.is_available}
-                            onCheckedChange={(checked) => 
-                              isEditingAvailability && updateDayAvailability(day.day_of_week, { is_available: checked })
-                            }
-                            disabled={!isEditingAvailability}
-                          />
-                        </div>
-                        
-                        {day.is_available && (
-                          <div className="grid grid-cols-3 gap-2">
-                            <div>
-                              <Label className="text-xs text-muted-foreground">Start Time</Label>
-                              <Input
-                                type="time"
-                                value={day.start_time}
-                                onChange={(e) => 
-                                  isEditingAvailability && updateDayAvailability(day.day_of_week, { start_time: e.target.value })
-                                }
-                                disabled={!isEditingAvailability}
-                                className="text-sm"
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-xs text-muted-foreground">End Time</Label>
-                              <Input
-                                type="time"
-                                value={day.end_time}
-                                onChange={(e) => 
-                                  isEditingAvailability && updateDayAvailability(day.day_of_week, { end_time: e.target.value })
-                                }
-                                disabled={!isEditingAvailability}
-                                className="text-sm"
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-xs text-muted-foreground">Max Hours</Label>
-                              <Input
-                                type="number"
-                                min="1"
-                                max="24"
-                                step="0.5"
-                                value={day.max_hours}
-                                onChange={(e) => 
-                                  isEditingAvailability && updateDayAvailability(day.day_of_week, { max_hours: parseFloat(e.target.value) || 0 })
-                                }
-                                disabled={!isEditingAvailability}
-                                className="text-sm"
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Summary */}
-                <div className="mt-4 p-3 bg-muted rounded-lg">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Total weekly hours:</span>
-                    <span className="font-medium">{getTotalWeeklyHours()} hours</span>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                {isEditingAvailability && (
-                  <div className="flex gap-2 mt-4">
-                    <Button 
-                      onClick={async () => {
-                        const success = await saveAvailability();
-                        if (success) {
-                          setIsEditingAvailability(false);
-                        }
-                      }}
-                      disabled={availabilitySaving}
-                      className="flex-1"
-                    >
-                      {availabilitySaving ? 'Saving...' : 'Save Changes'}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        resetToDefaults();
-                      }}
-                      disabled={availabilitySaving}
-                    >
-                      Reset
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setIsEditingAvailability(false)}
-                      disabled={availabilitySaving}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
 
         {/* Actions */}
         <Card>
