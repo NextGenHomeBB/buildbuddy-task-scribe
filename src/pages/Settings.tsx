@@ -12,9 +12,13 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Calendar as CalendarComponent } from '@/components/ui/calendar'
 import { useToast } from '@/hooks/use-toast'
 import { useWorkerAvailability } from '@/hooks/useWorkerAvailability'
-import { Bell, Moon, Globe, Shield, HelpCircle, Download, Clock, Calendar, Edit } from 'lucide-react'
+import { useWorkerDateAvailability } from '@/hooks/useWorkerDateAvailability'
+import { Bell, Moon, Globe, Shield, HelpCircle, Download, Clock, Calendar, Edit, X, Plus } from 'lucide-react'
+import { format, isToday } from 'date-fns'
 
 export default function Settings() {
   const navigate = useNavigate()
@@ -24,6 +28,8 @@ export default function Settings() {
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage()
   const [isDownloading, setIsDownloading] = useState(false)
   const [isEditingAvailability, setIsEditingAvailability] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  const [availabilityTab, setAvailabilityTab] = useState("weekly")
 
   const {
     availability,
@@ -34,6 +40,15 @@ export default function Settings() {
     resetToDefaults,
     getTotalWeeklyHours
   } = useWorkerAvailability()
+
+  const { 
+    dateOverrides, 
+    isLoading: dateOverridesLoading, 
+    isSaving: dateOverridesSaving, 
+    setDateAvailability, 
+    removeDateOverride, 
+    getDateOverride 
+  } = useWorkerDateAvailability()
 
   const downloadTimeSheetStatement = async () => {
     if (!user) return
@@ -105,6 +120,21 @@ export default function Settings() {
     } finally {
       setIsDownloading(false)
     }
+  }
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date)
+  }
+
+  const handleSetDateAvailability = async (isAvailable: boolean, note?: string) => {
+    if (!selectedDate) return
+    
+    const dateString = format(selectedDate, 'yyyy-MM-dd')
+    await setDateAvailability(dateString, isAvailable, note)
+  }
+
+  const handleRemoveDateOverride = async (date: string) => {
+    await removeDateOverride(date)
   }
 
   return (
@@ -206,8 +236,8 @@ export default function Settings() {
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium">Weekly Availability</div>
-                <div className="text-sm text-muted-foreground">Set your working hours and availability</div>
+                <div className="font-medium">Worker Availability</div>
+                <div className="text-sm text-muted-foreground">Manage weekly schedule and specific date overrides</div>
               </div>
             </div>
             <Dialog>
@@ -220,93 +250,209 @@ export default function Settings() {
                   Manage Availability
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+              <DialogContent className="w-[95vw] max-w-6xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
                 <DialogHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Clock className="w-5 h-5" />
-                      <DialogTitle>Weekly Availability</DialogTitle>
+                      <DialogTitle>Worker Availability</DialogTitle>
                     </div>
-                    {!isEditingAvailability && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setIsEditingAvailability(true)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setIsEditingAvailability(!isEditingAvailability)}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      {isEditingAvailability ? 'View Mode' : 'Edit Mode'}
+                    </Button>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Set your weekly availability and maximum hours per day
+                    Manage your weekly schedule and specific date overrides
                   </p>
                 </DialogHeader>
-                
-                {availabilityLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  </div>
-                ) : (
-                  <>
-                    {/* Weekly Calendar Grid */}
-                    <div className="space-y-3 sm:space-y-4">
-                      {availability.map((day) => {
-                        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                        const dayName = dayNames[day.day_of_week];
-                        
-                        return (
-                          <div key={day.day_of_week} className="border rounded-lg p-3 sm:p-4">
-                            <div className="flex items-center justify-between">
-                              <Label className="font-medium">{dayName}</Label>
-                              <Switch
-                                checked={day.is_available}
-                                onCheckedChange={(checked) => 
-                                  isEditingAvailability && updateDayAvailability(day.day_of_week, { is_available: checked })
+
+                <Tabs value={availabilityTab} onValueChange={setAvailabilityTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="weekly">Weekly Schedule</TabsTrigger>
+                    <TabsTrigger value="dates">Specific Dates</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="weekly" className="space-y-4">
+                    {availabilityLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-3 sm:space-y-4">
+                          {availability.map((day) => {
+                            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                            const dayName = dayNames[day.day_of_week];
+                            
+                            return (
+                              <div key={day.day_of_week} className="border rounded-lg p-3 sm:p-4">
+                                <div className="flex items-center justify-between">
+                                  <Label className="font-medium">{dayName}</Label>
+                                  <Switch
+                                    checked={day.is_available}
+                                    onCheckedChange={(checked) => 
+                                      isEditingAvailability && updateDayAvailability(day.day_of_week, { is_available: checked })
+                                    }
+                                    disabled={!isEditingAvailability}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="mt-4 p-3 bg-muted rounded-lg">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground">Available days:</span>
+                            <span className="font-medium">{availability.filter(day => day.is_available).length} out of 7</span>
+                          </div>
+                        </div>
+
+                        {isEditingAvailability && (
+                          <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                            <Button 
+                              onClick={async () => {
+                                const success = await saveAvailability();
+                                if (success) {
+                                  setIsEditingAvailability(false);
                                 }
-                                disabled={!isEditingAvailability}
-                              />
+                              }}
+                              disabled={availabilitySaving}
+                              className="flex-1"
+                            >
+                              {availabilitySaving ? 'Saving...' : 'Save Changes'}
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              onClick={() => {
+                                setIsEditingAvailability(false);
+                              }}
+                              className="flex-1"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="dates" className="space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="font-medium mb-2">Select Date</h4>
+                          <CalendarComponent
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={handleDateSelect}
+                            className="rounded-md border pointer-events-auto"
+                            modifiers={{
+                              available: (date) => {
+                                const dateString = format(date, 'yyyy-MM-dd')
+                                const override = getDateOverride(dateString)
+                                if (override) return override.is_available
+                                const dayOfWeek = date.getDay()
+                                return availability.find(day => day.day_of_week === dayOfWeek)?.is_available || false
+                              },
+                              unavailable: (date) => {
+                                const dateString = format(date, 'yyyy-MM-dd')
+                                const override = getDateOverride(dateString)
+                                if (override) return !override.is_available
+                                const dayOfWeek = date.getDay()
+                                return !(availability.find(day => day.day_of_week === dayOfWeek)?.is_available || false)
+                              },
+                              override: (date) => {
+                                const dateString = format(date, 'yyyy-MM-dd')
+                                return !!getDateOverride(dateString)
+                              }
+                            }}
+                            modifiersStyles={{
+                              available: { backgroundColor: '#dcfce7', color: '#166534' },
+                              unavailable: { backgroundColor: '#fecaca', color: '#991b1b' },
+                              override: { fontWeight: 'bold', border: '2px solid #3b82f6' }
+                            }}
+                          />
+                        </div>
+
+                        {selectedDate && (
+                          <div className="space-y-2">
+                            <h4 className="font-medium">
+                              {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                              {isToday(selectedDate) && <span className="text-blue-600 ml-2">(Today)</span>}
+                            </h4>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleSetDateAvailability(true)}
+                                disabled={dateOverridesSaving}
+                                className="text-green-600 border-green-600 hover:bg-green-50"
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Available
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleSetDateAvailability(false)}
+                                disabled={dateOverridesSaving}
+                                className="text-red-600 border-red-600 hover:bg-red-50"
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Unavailable
+                              </Button>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
+                        )}
+                      </div>
 
-                    {/* Summary */}
-                    <div className="mt-4 p-3 bg-muted rounded-lg">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Total weekly hours:</span>
-                        <span className="font-medium">{getTotalWeeklyHours()} hours</span>
+                      <div className="space-y-4">
+                        <h4 className="font-medium">Date Overrides</h4>
+                        {dateOverridesLoading ? (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        ) : dateOverrides.length === 0 ? (
+                          <div className="text-center py-8 text-muted-foreground">
+                            No date overrides set
+                          </div>
+                        ) : (
+                          <div className="space-y-2 max-h-64 overflow-y-auto">
+                            {dateOverrides.map((override) => (
+                              <div key={override.date} className="flex items-center justify-between p-3 border rounded-lg">
+                                <div>
+                                  <div className="font-medium">
+                                    {format(new Date(override.date), 'MMM d, yyyy')}
+                                  </div>
+                                  <div className={`text-sm ${override.is_available ? 'text-green-600' : 'text-red-600'}`}>
+                                    {override.is_available ? 'Available' : 'Unavailable'}
+                                  </div>
+                                  {override.note && (
+                                    <div className="text-xs text-muted-foreground">{override.note}</div>
+                                  )}
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleRemoveDateOverride(override.date)}
+                                  disabled={dateOverridesSaving}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
-
-                    {/* Action Buttons */}
-                    {isEditingAvailability && (
-                      <div className="flex flex-col sm:flex-row gap-2 mt-4">
-                        <Button 
-                          onClick={async () => {
-                            const success = await saveAvailability();
-                            if (success) {
-                              setIsEditingAvailability(false);
-                            }
-                          }}
-                          disabled={availabilitySaving}
-                          className="flex-1"
-                        >
-                          {availabilitySaving ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            setIsEditingAvailability(false);
-                          }}
-                          className="flex-1"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                )}
+                  </TabsContent>
+                </Tabs>
               </DialogContent>
             </Dialog>
           </CardContent>

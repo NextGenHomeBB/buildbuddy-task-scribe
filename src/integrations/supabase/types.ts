@@ -853,6 +853,36 @@ export type Database = {
         }
         Relationships: []
       }
+      worker_date_availability: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          is_available: boolean
+          note: string | null
+          updated_at: string
+          worker_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          is_available?: boolean
+          note?: string | null
+          updated_at?: string
+          worker_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          is_available?: boolean
+          note?: string | null
+          updated_at?: string
+          worker_id?: string
+        }
+        Relationships: []
+      }
       worker_expenses: {
         Row: {
           amount: number
