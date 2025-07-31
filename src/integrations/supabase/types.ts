@@ -203,6 +203,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           company_id: string | null
           created_at: string | null
           full_name: string | null
@@ -211,6 +212,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           company_id?: string | null
           created_at?: string | null
           full_name?: string | null
@@ -219,6 +221,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           company_id?: string | null
           created_at?: string | null
           full_name?: string | null
@@ -709,6 +712,45 @@ export type Database = {
           },
         ]
       }
+      user_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          message: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          invited_by?: string | null
+          message?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          message?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_project_role: {
         Row: {
           assigned_at: string | null
@@ -772,6 +814,42 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      worker_availability: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string | null
+          id: string
+          is_available: boolean
+          max_hours: number | null
+          start_time: string | null
+          updated_at: string
+          worker_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time?: string | null
+          id?: string
+          is_available?: boolean
+          max_hours?: number | null
+          start_time?: string | null
+          updated_at?: string
+          worker_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string | null
+          id?: string
+          is_available?: boolean
+          max_hours?: number | null
+          start_time?: string | null
+          updated_at?: string
+          worker_id?: string
         }
         Relationships: []
       }
