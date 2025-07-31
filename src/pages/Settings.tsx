@@ -17,6 +17,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar'
 import { useToast } from '@/hooks/use-toast'
 import { useWorkerAvailability } from '@/hooks/useWorkerAvailability'
 import { useWorkerDateAvailability } from '@/hooks/useWorkerDateAvailability'
+import { EnhancedDateAvailability } from '@/components/EnhancedDateAvailability'
 import { Bell, Moon, Globe, Shield, HelpCircle, Download, Clock, Calendar, Edit, X, Plus } from 'lucide-react'
 import { format, isToday } from 'date-fns'
 
@@ -41,13 +42,15 @@ export default function Settings() {
     getTotalWeeklyHours
   } = useWorkerAvailability()
 
-  const { 
-    dateOverrides, 
-    isLoading: dateOverridesLoading, 
-    isSaving: dateOverridesSaving, 
-    setDateAvailability, 
-    removeDateOverride, 
-    getDateOverride 
+  const {
+    dateOverrides,
+    isLoading: dateOverridesLoading,
+    isSaving: dateOverridesSaving,
+    setDateAvailability,
+    setBulkDateAvailability,
+    removeDateOverride,
+    clearAllDateOverrides,
+    getDateOverride
   } = useWorkerDateAvailability()
 
   const downloadTimeSheetStatement = async () => {
@@ -126,15 +129,16 @@ export default function Settings() {
     setSelectedDate(date)
   }
 
-  const handleSetDateAvailability = async (isAvailable: boolean, note?: string) => {
-    if (!selectedDate) return
-    
-    const dateString = format(selectedDate, 'yyyy-MM-dd')
-    await setDateAvailability(dateString, isAvailable, note)
+  const handleSetDateAvailability = async (dates: string[], isAvailable: boolean, note?: string) => {
+    return await setBulkDateAvailability(dates, isAvailable, note)
   }
 
   const handleRemoveDateOverride = async (date: string) => {
-    await removeDateOverride(date)
+    return await removeDateOverride(date)
+  }
+
+  const handleClearAllOverrides = async () => {
+    return await clearAllDateOverrides()
   }
 
   return (
@@ -342,115 +346,17 @@ export default function Settings() {
                     )}
                   </TabsContent>
 
-                  <TabsContent value="dates" className="space-y-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-medium mb-2">Select Date</h4>
-                          <CalendarComponent
-                            mode="single"
-                            selected={selectedDate}
-                            onSelect={handleDateSelect}
-                            className="rounded-md border pointer-events-auto"
-                            modifiers={{
-                              available: (date) => {
-                                const dateString = format(date, 'yyyy-MM-dd')
-                                const override = getDateOverride(dateString)
-                                if (override) return override.is_available
-                                const dayOfWeek = date.getDay()
-                                return availability.find(day => day.day_of_week === dayOfWeek)?.is_available || false
-                              },
-                              unavailable: (date) => {
-                                const dateString = format(date, 'yyyy-MM-dd')
-                                const override = getDateOverride(dateString)
-                                if (override) return !override.is_available
-                                const dayOfWeek = date.getDay()
-                                return !(availability.find(day => day.day_of_week === dayOfWeek)?.is_available || false)
-                              },
-                              override: (date) => {
-                                const dateString = format(date, 'yyyy-MM-dd')
-                                return !!getDateOverride(dateString)
-                              }
-                            }}
-                            modifiersStyles={{
-                              available: { backgroundColor: '#dcfce7', color: '#166534' },
-                              unavailable: { backgroundColor: '#fecaca', color: '#991b1b' },
-                              override: { fontWeight: 'bold', border: '2px solid #3b82f6' }
-                            }}
-                          />
-                        </div>
-
-                        {selectedDate && (
-                          <div className="space-y-2">
-                            <h4 className="font-medium">
-                              {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-                              {isToday(selectedDate) && <span className="text-blue-600 ml-2">(Today)</span>}
-                            </h4>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleSetDateAvailability(true)}
-                                disabled={dateOverridesSaving}
-                                className="text-green-600 border-green-600 hover:bg-green-50"
-                              >
-                                <Plus className="h-4 w-4 mr-1" />
-                                Available
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleSetDateAvailability(false)}
-                                disabled={dateOverridesSaving}
-                                className="text-red-600 border-red-600 hover:bg-red-50"
-                              >
-                                <X className="h-4 w-4 mr-1" />
-                                Unavailable
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-4">
-                        <h4 className="font-medium">Date Overrides</h4>
-                        {dateOverridesLoading ? (
-                          <div className="flex items-center justify-center py-8">
-                            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                          </div>
-                        ) : dateOverrides.length === 0 ? (
-                          <div className="text-center py-8 text-muted-foreground">
-                            No date overrides set
-                          </div>
-                        ) : (
-                          <div className="space-y-2 max-h-64 overflow-y-auto">
-                            {dateOverrides.map((override) => (
-                              <div key={override.date} className="flex items-center justify-between p-3 border rounded-lg">
-                                <div>
-                                  <div className="font-medium">
-                                    {format(new Date(override.date), 'MMM d, yyyy')}
-                                  </div>
-                                  <div className={`text-sm ${override.is_available ? 'text-green-600' : 'text-red-600'}`}>
-                                    {override.is_available ? 'Available' : 'Unavailable'}
-                                  </div>
-                                  {override.note && (
-                                    <div className="text-xs text-muted-foreground">{override.note}</div>
-                                  )}
-                                </div>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleRemoveDateOverride(override.date)}
-                                  disabled={dateOverridesSaving}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                  <TabsContent value="dates" className="space-y-6">
+                    <EnhancedDateAvailability
+                      availability={availability}
+                      dateOverrides={dateOverrides}
+                      onSetDateAvailability={handleSetDateAvailability}
+                      onRemoveDateOverride={handleRemoveDateOverride}
+                      onClearAllOverrides={handleClearAllOverrides}
+                      isLoading={dateOverridesLoading}
+                      isSaving={dateOverridesSaving}
+                      getDateOverride={getDateOverride}
+                    />
                   </TabsContent>
                 </Tabs>
               </DialogContent>

@@ -113,6 +113,74 @@ export function useWorkerDateAvailability() {
     }
   }
 
+  const setBulkDateAvailability = async (dates: string[], isAvailable: boolean, note?: string) => {
+    if (!user || dates.length === 0) return false
+
+    setIsSaving(true)
+    try {
+      const upsertData = dates.map(date => ({
+        worker_id: user.id,
+        date,
+        is_available: isAvailable,
+        note: note || null,
+      }))
+
+      const { error } = await supabase
+        .from('worker_date_availability')
+        .upsert(upsertData, {
+          onConflict: 'worker_id,date'
+        })
+
+      if (error) throw error
+
+      // Update local state
+      setDateOverrides(prev => {
+        const filtered = prev.filter(override => !dates.includes(override.date))
+        const newOverrides = dates.map(date => ({ date, is_available: isAvailable, note }))
+        return [...filtered, ...newOverrides].sort((a, b) => a.date.localeCompare(b.date))
+      })
+
+      return true
+    } catch (error) {
+      console.error('Error setting bulk date availability:', error)
+      return false
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const clearAllDateOverrides = async () => {
+    if (!user) return false
+
+    setIsSaving(true)
+    try {
+      const { error } = await supabase
+        .from('worker_date_availability')
+        .delete()
+        .eq('worker_id', user.id)
+
+      if (error) throw error
+
+      setDateOverrides([])
+      
+      toast({
+        title: 'Success',
+        description: 'All date overrides cleared',
+      })
+      return true
+    } catch (error) {
+      console.error('Error clearing date overrides:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to clear date overrides',
+        variant: 'destructive',
+      })
+      return false
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const removeDateOverride = async (date: string) => {
     if (!user) return false
 
@@ -156,7 +224,9 @@ export function useWorkerDateAvailability() {
     isLoading,
     isSaving,
     setDateAvailability,
+    setBulkDateAvailability,
     removeDateOverride,
+    clearAllDateOverrides,
     getDateOverride,
   }
 }
