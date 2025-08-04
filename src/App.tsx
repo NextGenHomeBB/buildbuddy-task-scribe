@@ -23,6 +23,7 @@ import TaskMap from "./pages/TaskMap";
 import ListsHomeScreen from "./pages/ListsHomeScreen";
 import TaskListScreen from "./pages/TaskListScreen";
 import TaskHistory from "./pages/TaskHistory";
+import Timer from "./pages/Timer";
 import NotFound from "./pages/NotFound";
 import { registerOnlineListener } from "@/lib/offlineQueue";
 
@@ -64,6 +65,11 @@ const App = () => {
                   <Route path="/today" element={
                     <RequireAuth>
                       <Today />
+                    </RequireAuth>
+                  } />
+                  <Route path="/timer" element={
+                    <RequireAuth>
+                      <Timer />
                     </RequireAuth>
                   } />
                   <Route path="/tasks" element={

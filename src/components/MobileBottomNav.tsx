@@ -1,4 +1,4 @@
-import { Home, Calendar, List, Briefcase, Map } from 'lucide-react'
+import { Home, Calendar, List, Briefcase, Clock } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AddTaskDialog } from './AddTaskDialog'
@@ -9,9 +9,9 @@ export function MobileBottomNav() {
 
   const navItems = [
     { icon: Home, label: t('navigation.today'), path: '/today' },
+    { icon: Clock, label: 'Timer', path: '/timer' },
     { icon: Calendar, label: t('navigation.calendar'), path: '/calendar' },
     { icon: List, label: t('navigation.lists'), path: '/lists' },
-    { icon: Map, label: 'Map', path: '/map' },
     { icon: Briefcase, label: t('navigation.projects'), path: '/projects' },
   ]
 

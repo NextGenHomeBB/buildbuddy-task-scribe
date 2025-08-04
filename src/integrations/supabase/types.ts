@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      active_shifts: {
+        Row: {
+          break_start: string | null
+          created_at: string
+          id: string
+          project_id: string | null
+          shift_start: string
+          shift_type: string | null
+          total_break_duration: number | null
+          updated_at: string
+          worker_id: string
+        }
+        Insert: {
+          break_start?: string | null
+          created_at?: string
+          id?: string
+          project_id?: string | null
+          shift_start?: string
+          shift_type?: string | null
+          total_break_duration?: number | null
+          updated_at?: string
+          worker_id: string
+        }
+        Update: {
+          break_start?: string | null
+          created_at?: string
+          id?: string
+          project_id?: string | null
+          shift_start?: string
+          shift_type?: string | null
+          total_break_duration?: number | null
+          updated_at?: string
+          worker_id?: string
+        }
+        Relationships: []
+      }
       ai_prompt_templates: {
         Row: {
           created_at: string | null
@@ -35,6 +71,141 @@ export type Database = {
           name?: string
           role_scope?: string | null
           template?: string
+        }
+        Relationships: []
+      }
+      calendar_events: {
+        Row: {
+          all_day: boolean
+          created_at: string
+          description: string | null
+          ends_at: string
+          external_id: string | null
+          id: string
+          last_synced: string | null
+          location: string | null
+          provider: string | null
+          starts_at: string
+          sync_error: string | null
+          sync_status: string | null
+          task_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          all_day?: boolean
+          created_at?: string
+          description?: string | null
+          ends_at: string
+          external_id?: string | null
+          id?: string
+          last_synced?: string | null
+          location?: string | null
+          provider?: string | null
+          starts_at: string
+          sync_error?: string | null
+          sync_status?: string | null
+          task_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          all_day?: boolean
+          created_at?: string
+          description?: string | null
+          ends_at?: string
+          external_id?: string | null
+          id?: string
+          last_synced?: string | null
+          location?: string | null
+          provider?: string | null
+          starts_at?: string
+          sync_error?: string | null
+          sync_status?: string | null
+          task_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      calendar_oauth_tokens: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          provider: string
+          refresh_token: string | null
+          scope: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          provider: string
+          refresh_token?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          provider?: string
+          refresh_token?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      calendar_sync_settings: {
+        Row: {
+          auto_sync_enabled: boolean | null
+          created_at: string
+          google_calendar_id: string | null
+          google_enabled: boolean | null
+          id: string
+          outlook_calendar_id: string | null
+          outlook_enabled: boolean | null
+          sync_direction: string | null
+          sync_interval_minutes: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_sync_enabled?: boolean | null
+          created_at?: string
+          google_calendar_id?: string | null
+          google_enabled?: boolean | null
+          id?: string
+          outlook_calendar_id?: string | null
+          outlook_enabled?: boolean | null
+          sync_direction?: string | null
+          sync_interval_minutes?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_sync_enabled?: boolean | null
+          created_at?: string
+          google_calendar_id?: string | null
+          google_enabled?: boolean | null
+          id?: string
+          outlook_calendar_id?: string | null
+          outlook_enabled?: boolean | null
+          sync_direction?: string | null
+          sync_interval_minutes?: number | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -142,6 +313,205 @@ export type Database = {
             columns: ["task_template_id"]
             isOneToOne: false
             referencedRelation: "worker.my_tasks_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_lines: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          line_total: number
+          material_description: string | null
+          material_name: string
+          material_sku: string | null
+          material_unit: string | null
+          quantity: number
+          sort_order: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          line_total?: number
+          material_description?: string | null
+          material_name: string
+          material_sku?: string | null
+          material_unit?: string | null
+          quantity?: number
+          sort_order?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          line_total?: number
+          material_description?: string | null
+          material_name?: string
+          material_sku?: string | null
+          material_unit?: string | null
+          quantity?: number
+          sort_order?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_lines_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_sequences: {
+        Row: {
+          created_at: string
+          current_number: number
+          document_type: string
+          id: string
+          prefix: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          current_number?: number
+          document_type: string
+          id?: string
+          prefix: string
+          updated_at?: string
+          year?: number
+        }
+        Update: {
+          created_at?: string
+          current_number?: number
+          document_type?: string
+          id?: string
+          prefix?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          client_address: string | null
+          client_email: string | null
+          client_name: string
+          client_phone: string | null
+          converted_to_invoice_id: string | null
+          created_at: string
+          created_by: string
+          document_number: string
+          document_type: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          payment_status: string | null
+          payment_url: string | null
+          pdf_url: string | null
+          project_id: string | null
+          source_document_id: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          subtotal: number
+          tax_amount: number | null
+          tax_rate: number | null
+          terms_conditions: string | null
+          total_amount: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          client_address?: string | null
+          client_email?: string | null
+          client_name: string
+          client_phone?: string | null
+          converted_to_invoice_id?: string | null
+          created_at?: string
+          created_by: string
+          document_number: string
+          document_type: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_status?: string | null
+          payment_url?: string | null
+          pdf_url?: string | null
+          project_id?: string | null
+          source_document_id?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          subtotal?: number
+          tax_amount?: number | null
+          tax_rate?: number | null
+          terms_conditions?: string | null
+          total_amount?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          client_address?: string | null
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string | null
+          converted_to_invoice_id?: string | null
+          created_at?: string
+          created_by?: string
+          document_number?: string
+          document_type?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_status?: string | null
+          payment_url?: string | null
+          pdf_url?: string | null
+          project_id?: string | null
+          source_document_id?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          subtotal?: number
+          tax_amount?: number | null
+          tax_rate?: number | null
+          terms_conditions?: string | null
+          total_amount?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_converted_to_invoice_id_fkey"
+            columns: ["converted_to_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
             referencedColumns: ["id"]
           },
         ]
@@ -667,31 +1037,122 @@ export type Database = {
           },
         ]
       }
+      time_logs: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_at: string | null
+          id: string
+          project_id: string | null
+          start_at: string
+          task_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_at?: string | null
+          id?: string
+          project_id?: string | null
+          start_at?: string
+          task_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_at?: string | null
+          id?: string
+          project_id?: string | null
+          start_at?: string
+          task_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_logs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_logs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "worker.my_tasks_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       time_sheets: {
         Row: {
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
+          break_duration: number | null
           created_at: string | null
           hours: number | null
           id: string
+          location: string | null
           note: string | null
           project_id: string | null
+          rejection_reason: string | null
+          shift_type: string | null
+          sync_error: string | null
+          sync_status: string | null
+          synced_at: string | null
+          updated_at: string | null
           user_id: string | null
           work_date: string | null
         }
         Insert: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          break_duration?: number | null
           created_at?: string | null
           hours?: number | null
           id?: string
+          location?: string | null
           note?: string | null
           project_id?: string | null
+          rejection_reason?: string | null
+          shift_type?: string | null
+          sync_error?: string | null
+          sync_status?: string | null
+          synced_at?: string | null
+          updated_at?: string | null
           user_id?: string | null
           work_date?: string | null
         }
         Update: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          break_duration?: number | null
           created_at?: string | null
           hours?: number | null
           id?: string
+          location?: string | null
           note?: string | null
           project_id?: string | null
+          rejection_reason?: string | null
+          shift_type?: string | null
+          sync_error?: string | null
+          sync_status?: string | null
+          synced_at?: string | null
+          updated_at?: string | null
           user_id?: string | null
           work_date?: string | null
         }
@@ -1120,6 +1581,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_timer_overlap: {
+        Args: {
+          p_user_id: string
+          p_start_time?: string
+          p_exclude_id?: string
+        }
+        Returns: boolean
+      }
       complete_daily_task: {
         Args: { assignment_id: string }
         Returns: Json
@@ -1149,6 +1618,10 @@ export type Database = {
           created_at: string
           updated_at: string
         }[]
+      }
+      next_document_number: {
+        Args: { doc_type: string }
+        Returns: string
       }
       setup_demo_data: {
         Args: { manager_id: string; worker_id: string }
