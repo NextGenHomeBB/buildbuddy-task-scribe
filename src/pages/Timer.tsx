@@ -7,6 +7,7 @@ import { useTimer } from '@/hooks/useTimer';
 import { TimerProjectModal } from '@/components/TimerProjectModal';
 import { DailySummary } from '@/components/DailySummary';
 import { MaterialsModal } from '@/components/MaterialsModal';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 export default function Timer() {
   const [showModal, setShowModal] = useState(false);
@@ -77,9 +78,10 @@ export default function Timer() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-2xl">
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Timer</h1>
+    <div className="min-h-screen bg-background pb-20 lg:pb-0">
+      <div className="container mx-auto p-6 max-w-2xl">
+        <div className="space-y-6">
+          <h1 className="text-2xl font-bold">Timer</h1>
 
         {/* Active Timer Display */}
         <Card>
@@ -186,7 +188,11 @@ export default function Timer() {
           taskId={completedTaskId}
           onSave={handleMaterialsSaved}
         />
+        </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }
