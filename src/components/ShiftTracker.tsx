@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Clock, Play, Square, Timer } from 'lucide-react'
+import { Clock, Play, Square, Timer, Database, Trash2, Wifi, WifiOff } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 interface TimeSheet {
@@ -24,15 +24,19 @@ export function ShiftTracker() {
   const [shiftStartTime, setShiftStartTime] = useState<Date | null>(null)
   const [elapsedTime, setElapsedTime] = useState(0)
   const [todayHours, setTodayHours] = useState(0)
+  const [activeShiftId, setActiveShiftId] = useState<string | null>(null)
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'pending' | 'error'>('synced')
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null)
 
   // Load shift state from localStorage on mount
   useEffect(() => {
     const savedShiftData = localStorage.getItem('activeShift')
     if (savedShiftData) {
-      const { startTime } = JSON.parse(savedShiftData)
+      const { startTime, activeShiftId } = JSON.parse(savedShiftData)
       const shiftStart = new Date(startTime)
       setShiftStartTime(shiftStart)
       setIsShiftActive(true)
+      setActiveShiftId(activeShiftId || null)
       
       // Calculate elapsed time
       const now = new Date()
@@ -40,6 +44,21 @@ export function ShiftTracker() {
       setElapsedTime(elapsed)
     }
   }, [])
+
+  // Auto-sync every 30 seconds during active shift
+  useEffect(() => {
+    let syncInterval: NodeJS.Timeout
+    
+    if (isShiftActive && activeShiftId) {
+      syncInterval = setInterval(() => {
+        syncToDatabase()
+      }, 30000) // 30 seconds
+    }
+
+    return () => {
+      if (syncInterval) clearInterval(syncInterval)
+    }
+  }, [isShiftActive, activeShiftId])
 
   // Update elapsed time every second when shift is active
   useEffect(() => {
@@ -85,13 +104,88 @@ export function ShiftTracker() {
     setTodayHours(total)
   }
 
-  const startShift = () => {
+  const syncToDatabase = async () => {
+    if (!user || !shiftStartTime) return
+
+    setSyncStatus('pending')
+    
+    try {
+      if (activeShiftId) {
+        // Update existing active shift
+        const { error } = await supabase
+          .from('active_shifts')
+          .update({
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', activeShiftId)
+
+        if (error) throw error
+      } else {
+        // Create new active shift record
+        const { data, error } = await supabase
+          .from('active_shifts')
+          .insert({
+            worker_id: user.id,
+            shift_start: shiftStartTime.toISOString(),
+            shift_type: 'regular'
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+        
+        setActiveShiftId(data.id)
+        
+        // Update localStorage with shift ID
+        localStorage.setItem('activeShift', JSON.stringify({
+          startTime: shiftStartTime.toISOString(),
+          activeShiftId: data.id
+        }))
+      }
+
+      setSyncStatus('synced')
+      setLastSyncTime(new Date())
+      
+      toast({
+        title: 'Synced Successfully',
+        description: 'Active shift synced to database',
+      })
+    } catch (error) {
+      console.error('Error syncing shift:', error)
+      setSyncStatus('error')
+      
+      toast({
+        title: 'Sync Failed',
+        description: 'Failed to sync shift to database',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const clearShiftData = () => {
+    setIsShiftActive(false)
+    setShiftStartTime(null)
+    setElapsedTime(0)
+    setActiveShiftId(null)
+    setSyncStatus('synced')
+    setLastSyncTime(null)
+    
+    // Clear localStorage
+    localStorage.removeItem('activeShift')
+    
+    toast({
+      title: 'Shift Data Cleared',
+      description: 'Local shift data has been cleared',
+    })
+  }
+
+  const startShift = async () => {
     const now = new Date()
     setShiftStartTime(now)
     setIsShiftActive(true)
     setElapsedTime(0)
     
-    // Save to localStorage
+    // Save to localStorage initially
     localStorage.setItem('activeShift', JSON.stringify({
       startTime: now.toISOString()
     }))
@@ -100,6 +194,9 @@ export function ShiftTracker() {
       title: 'Shift Started',
       description: `Started at ${now.toLocaleTimeString()}`,
     })
+
+    // Auto-sync to database
+    setTimeout(() => syncToDatabase(), 1000)
   }
 
   const stopShift = async () => {
@@ -110,6 +207,7 @@ export function ShiftTracker() {
     const today = new Date().toISOString().split('T')[0]
 
     try {
+      // Save to time_sheets
       const { error } = await supabase
         .from('time_sheets')
         .insert({
@@ -121,9 +219,20 @@ export function ShiftTracker() {
 
       if (error) throw error
 
+      // Clean up active shift record if exists
+      if (activeShiftId) {
+        await supabase
+          .from('active_shifts')
+          .delete()
+          .eq('id', activeShiftId)
+      }
+
       setIsShiftActive(false)
       setShiftStartTime(null)
       setElapsedTime(0)
+      setActiveShiftId(null)
+      setSyncStatus('synced')
+      setLastSyncTime(null)
       
       // Clear localStorage
       localStorage.removeItem('activeShift')
@@ -208,6 +317,51 @@ export function ShiftTracker() {
             </Button>
           )}
         </div>
+
+        {/* Sync Controls (visible during active shift) */}
+        {isShiftActive && (
+          <div className="space-y-3">
+            {/* Sync Status */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                {syncStatus === 'synced' && <Wifi className="h-3 w-3 text-green-500" />}
+                {syncStatus === 'pending' && <Database className="h-3 w-3 animate-pulse text-yellow-500" />}
+                {syncStatus === 'error' && <WifiOff className="h-3 w-3 text-red-500" />}
+                <span>
+                  {syncStatus === 'synced' && 'Synced'}
+                  {syncStatus === 'pending' && 'Syncing...'}
+                  {syncStatus === 'error' && 'Sync Failed'}
+                </span>
+              </div>
+              {lastSyncTime && (
+                <span>Last sync: {lastSyncTime.toLocaleTimeString()}</span>
+              )}
+            </div>
+
+            {/* Sync and Clear Buttons */}
+            <div className="flex gap-2">
+              <Button 
+                onClick={syncToDatabase} 
+                variant="outline" 
+                size="sm" 
+                className="flex-1 flex items-center gap-2"
+                disabled={syncStatus === 'pending'}
+              >
+                <Database className="h-3 w-3" />
+                Sync to Database
+              </Button>
+              <Button 
+                onClick={clearShiftData} 
+                variant="outline" 
+                size="sm" 
+                className="flex-1 flex items-center gap-2"
+              >
+                <Trash2 className="h-3 w-3" />
+                Clear
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
