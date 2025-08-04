@@ -6,9 +6,12 @@ import { Play, Square, Clock, Briefcase, CheckSquare } from 'lucide-react';
 import { useTimer } from '@/hooks/useTimer';
 import { TimerProjectModal } from '@/components/TimerProjectModal';
 import { DailySummary } from '@/components/DailySummary';
+import { MaterialsModal } from '@/components/MaterialsModal';
 
 export default function Timer() {
   const [showModal, setShowModal] = useState(false);
+  const [showMaterialsModal, setShowMaterialsModal] = useState(false);
+  const [completedTaskId, setCompletedTaskId] = useState<string | null>(null);
   
   const {
     activeTimer,
@@ -27,15 +30,35 @@ export default function Timer() {
 
   const handleStopAndSwitch = () => {
     if (activeTimer) {
+      const taskId = activeTimer.task_id;
       stopTimer(activeTimer.id);
-      // Modal will open automatically after stopping via useEffect or we can open it here
-      setTimeout(() => setShowModal(true), 500);
+      
+      // Check if this task has materials by setting up the task ID and showing materials modal
+      if (taskId) {
+        setCompletedTaskId(taskId);
+        setShowMaterialsModal(true);
+      } else {
+        // No task or no materials, go directly to project selection
+        setTimeout(() => setShowModal(true), 500);
+      }
     }
   };
 
   const handleStartTimer = (projectId: string, taskId?: string, description?: string) => {
     startTimer({ projectId, taskId, description });
     setShowModal(false);
+  };
+
+  const handleMaterialsSaved = () => {
+    setShowMaterialsModal(false);
+    setCompletedTaskId(null);
+    setShowModal(true);
+  };
+
+  const handleMaterialsSkipped = () => {
+    setShowMaterialsModal(false);
+    setCompletedTaskId(null);
+    setShowModal(true);
   };
 
   if (isLoadingTimer) {
@@ -150,6 +173,18 @@ export default function Timer() {
           onOpenChange={setShowModal}
           onConfirm={handleStartTimer}
           isLoading={isStarting}
+        />
+        
+        {/* Materials Modal */}
+        <MaterialsModal
+          open={showMaterialsModal}
+          onOpenChange={(open) => {
+            if (!open) {
+              handleMaterialsSkipped();
+            }
+          }}
+          taskId={completedTaskId}
+          onSave={handleMaterialsSaved}
         />
       </div>
     </div>

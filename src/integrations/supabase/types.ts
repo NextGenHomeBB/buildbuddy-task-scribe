@@ -612,23 +612,32 @@ export type Database = {
         Row: {
           id: string
           material_id: string | null
+          planned_qty: number | null
           project_id: string | null
           quantity: number | null
+          task_id: string | null
           total_cost: number | null
+          used_flag: boolean | null
         }
         Insert: {
           id?: string
           material_id?: string | null
+          planned_qty?: number | null
           project_id?: string | null
           quantity?: number | null
+          task_id?: string | null
           total_cost?: number | null
+          used_flag?: boolean | null
         }
         Update: {
           id?: string
           material_id?: string | null
+          planned_qty?: number | null
           project_id?: string | null
           quantity?: number | null
+          task_id?: string | null
           total_cost?: number | null
+          used_flag?: boolean | null
         }
         Relationships: [
           {
@@ -643,6 +652,20 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_materials_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_materials_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "worker.my_tasks_view"
             referencedColumns: ["id"]
           },
         ]
