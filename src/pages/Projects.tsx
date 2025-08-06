@@ -14,7 +14,7 @@ interface Project {
   id: string
   name: string
   description: string | null
-  status: string
+  status: string | null
   progress: number
   budget: number | null
   location: string | null
@@ -110,7 +110,7 @@ export default function Projects() {
     )
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     switch (status) {
       case 'active':
         return 'bg-green-500'
@@ -207,9 +207,9 @@ export default function Projects() {
                       <CardTitle className="text-lg">{project.name}</CardTitle>
                       <Badge 
                         variant="secondary" 
-                        className={`${getStatusColor(project.status)} text-white`}
+                        className={`${getStatusColor(project.status || 'unknown')} text-white`}
                       >
-                        {project.status.replace('_', ' ').toUpperCase()}
+                        {(project.status || 'unknown').replace('_', ' ').toUpperCase()}
                       </Badge>
                     </div>
                   </div>
