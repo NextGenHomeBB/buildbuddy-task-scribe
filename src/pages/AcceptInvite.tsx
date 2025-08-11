@@ -23,7 +23,7 @@ export default function AcceptInvite() {
   useEffect(() => {
     if (!user) {
       // Redirect to login with the invite token preserved
-      navigate(`/login?redirect=${encodeURIComponent(`/accept-invite/${token}`)}`)
+      navigate(`/login?redirect=${encodeURIComponent(`/invite/${token}`)}`)
       return
     }
 

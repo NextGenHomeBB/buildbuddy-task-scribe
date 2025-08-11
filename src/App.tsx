@@ -113,7 +113,7 @@ const App = () => {
                   <Route path="/lists" element={<RequireAuth><ListsHomeScreen /></RequireAuth>} />
                   <Route path="/lists/:id" element={<RequireAuth><TaskListScreen /></RequireAuth>} />
                   <Route path="/history" element={<RequireAuth><TaskHistory /></RequireAuth>} />
-                  <Route path="/accept-invite/:token" element={<AcceptInvite />} />
+                  <Route path="/invite/:token" element={<AcceptInvite />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

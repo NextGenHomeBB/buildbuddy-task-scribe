@@ -311,12 +311,21 @@ export function ShiftTracker() {
         {/* Control Buttons */}
         <div className="flex gap-2">
           {!isShiftActive ? (
-            <Button onClick={startShift} className="flex-1 flex items-center gap-2">
+            <Button 
+              onClick={startShift} 
+              className="flex-1 flex items-center gap-2"
+              data-testid="start-shift-button"
+            >
               <Play className="h-4 w-4" />
               Start Shift
             </Button>
           ) : (
-            <Button onClick={stopShift} variant="destructive" className="flex-1 flex items-center gap-2">
+            <Button 
+              onClick={stopShift} 
+              variant="destructive" 
+              className="flex-1 flex items-center gap-2"
+              data-testid="end-shift-button"
+            >
               <Square className="h-4 w-4" />
               End Shift
             </Button>

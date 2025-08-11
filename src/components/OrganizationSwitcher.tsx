@@ -11,7 +11,7 @@ import { useOrganization } from '@/contexts/OrganizationContext'
 import { Badge } from '@/components/ui/badge'
 
 export function OrganizationSwitcher() {
-  const { currentOrgId, organizations, switchOrganization, isLoading } = useOrganization()
+  const { currentOrgId, organizations, switchOrganization, isLoading, isExpiringSoon } = useOrganization()
 
   if (isLoading || organizations.length === 0) {
     return null
@@ -22,7 +22,11 @@ export function OrganizationSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-2 max-w-[200px]">
+        <Button 
+          variant="ghost" 
+          className="flex items-center gap-2 max-w-[200px]"
+          data-testid="org-switcher"
+        >
           <Building2 className="h-4 w-4" />
           <span className="truncate">{currentOrg?.organization.name || 'Select Organization'}</span>
           <ChevronDown className="h-4 w-4" />
@@ -37,11 +41,20 @@ export function OrganizationSwitcher() {
           <DropdownMenuItem
             key={org.org_id}
             onClick={() => switchOrganization(org.org_id)}
-            className="flex items-center justify-between"
+            className="flex items-center justify-between p-3"
           >
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-1">
               <span className="font-medium">{org.organization.name}</span>
-              <span className="text-xs text-muted-foreground capitalize">{org.role}</span>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs capitalize">
+                  {org.role}
+                </Badge>
+                {isExpiringSoon(org.expires_at) && (
+                  <Badge variant="destructive" className="text-xs">
+                    Expiring Soon
+                  </Badge>
+                )}
+              </div>
             </div>
             {org.org_id === currentOrgId && (
               <Badge variant="secondary" className="text-xs">Current</Badge>

@@ -14,13 +14,14 @@ import { Calendar, Menu, History } from 'lucide-react'
 import { useDailyTasks } from '@/hooks/useDailyTasks'
 import { DailyTaskCard } from '@/components/DailyTaskCard'
 import { OrganizationSwitcher } from '@/components/OrganizationSwitcher'
+import { OrganizationPicker } from '@/components/OrganizationPicker'
 import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 
 export default function Today() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
-  const { currentOrgId, isLoading: isOrgLoading } = useOrganization()
+  const { currentOrgId, isLoading: isOrgLoading, hasValidOrganization } = useOrganization()
   const { 
     dailyTasks, 
     isLoading: isDailyLoading, 
@@ -107,6 +108,11 @@ export default function Today() {
 
   const handleSignOut = async () => {
     await signOut()
+  }
+
+  // Show organization picker if no valid organization is selected
+  if (!isOrgLoading && !hasValidOrganization) {
+    return <OrganizationPicker />
   }
 
   if (isLoading) {
