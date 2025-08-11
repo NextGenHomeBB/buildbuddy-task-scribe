@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/contexts/AuthContext'
+import { useOrganization } from '@/contexts/OrganizationContext'
 import { enqueueMutation } from '@/lib/offlineQueue'
 
 interface WorkerTask {
@@ -24,22 +25,24 @@ export function useWorkerTasks() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const { user } = useAuth()
+  const { currentOrgId } = useOrganization()
 
   const {
     data: tasks,
     isLoading,
     error
   } = useQuery({
-    queryKey: ['worker-tasks'],
+    queryKey: ['worker-tasks', currentOrgId],
     queryFn: async () => {
-      if (!user?.id) {
-        throw new Error('User not authenticated')
+      if (!user?.id || !currentOrgId) {
+        throw new Error('User not authenticated or no organization selected')
       }
 
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('assignee', user.id)
+        .eq('org_id', currentOrgId)
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -52,7 +55,7 @@ export function useWorkerTasks() {
         status: task.status === 'done' ? 'completed' : 'pending'
       })) as WorkerTask[]
     },
-    enabled: !!user?.id
+    enabled: !!user && !!currentOrgId
   })
 
   const updateTaskStatus = useMutation({

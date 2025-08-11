@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { useOrganization } from '@/contexts/OrganizationContext'
 import { enqueueMutation } from '@/lib/offlineQueue'
 
 export interface DailyTaskAssignment {
@@ -24,6 +26,8 @@ export interface DailyTaskAssignment {
 }
 
 export function useDailyTasks() {
+  const { user } = useAuth()
+  const { currentOrgId } = useOrganization()
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
@@ -32,8 +36,10 @@ export function useDailyTasks() {
     isLoading,
     error
   } = useQuery({
-    queryKey: ['daily-tasks'],
+    queryKey: ['daily-tasks', currentOrgId],
     queryFn: async () => {
+      if (!user || !currentOrgId) return []
+      
       console.log('Fetching daily tasks for date:', new Date().toISOString().split('T')[0])
       
       const { data, error } = await supabase
@@ -43,13 +49,15 @@ export function useDailyTasks() {
           task_template:tasks!task_template_id (
             title,
             description,
-            priority
+            priority,
+            org_id
           ),
           project:projects (
             name
           )
         `)
         .eq('assigned_date', new Date().toISOString().split('T')[0])
+        .eq('worker_id', user.id)
         .eq('status', 'pending')
         .gt('expires_at', new Date().toISOString()) // Only show tasks that haven't expired yet
         .order('created_at', { ascending: false })
@@ -61,8 +69,14 @@ export function useDailyTasks() {
         throw error
       }
       
-      return data as DailyTaskAssignment[]
-    }
+      // Filter by organization
+      const filteredData = (data || []).filter(task => 
+        task.task_template?.org_id === currentOrgId
+      )
+      
+      return filteredData as DailyTaskAssignment[]
+    },
+    enabled: !!user && !!currentOrgId
   })
 
   const completeTask = useMutation({

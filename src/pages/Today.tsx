@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { LogOut, User, Settings } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { useOrganization } from '@/contexts/OrganizationContext'
 import { useWorkerTasks } from '@/hooks/useWorkerTasks'
 import { TaskCard } from '@/components/TaskCard'
 import { MobileBottomNav } from '@/components/MobileBottomNav'
@@ -12,12 +13,14 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Calendar, Menu, History } from 'lucide-react'
 import { useDailyTasks } from '@/hooks/useDailyTasks'
 import { DailyTaskCard } from '@/components/DailyTaskCard'
+import { OrganizationSwitcher } from '@/components/OrganizationSwitcher'
 import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 
 export default function Today() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
+  const { currentOrgId, isLoading: isOrgLoading } = useOrganization()
   const { 
     dailyTasks, 
     isLoading: isDailyLoading, 
@@ -71,7 +74,7 @@ export default function Today() {
     return priorityA - priorityB
   })
 
-  const isLoading = isDailyLoading || isWorkerLoading
+  const isLoading = isDailyLoading || isWorkerLoading || isOrgLoading
   const error = dailyError
 
   // Fetch user profile name
@@ -174,12 +177,15 @@ export default function Today() {
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <img 
-              src="/lovable-uploads/f8eff9bf-a328-4c88-bf0b-a0a5a85c77ec.png" 
-              alt="NextGen Home" 
-              className="h-8 w-auto cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => navigate('/today')}
-            />
+            <div className="flex items-center gap-4">
+              <img 
+                src="/lovable-uploads/f8eff9bf-a328-4c88-bf0b-a0a5a85c77ec.png" 
+                alt="NextGen Home" 
+                className="h-8 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => navigate('/today')}
+              />
+              <OrganizationSwitcher />
+            </div>
             
             <div className="w-9" /> {/* Spacer for center alignment */}
           </div>

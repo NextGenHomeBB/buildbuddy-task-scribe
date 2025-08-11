@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/contexts/OrganizationContext';
 import { enqueueMutation } from '@/lib/offlineQueue';
 
 export interface TimeLog {
@@ -28,6 +30,8 @@ export interface Task {
 }
 
 export const useTimer = () => {
+  const { user } = useAuth();
+  const { currentOrgId } = useOrganization();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -127,7 +131,8 @@ export const useTimer = () => {
       const { data, error } = await supabase
         .from('time_logs')
         .insert({
-          user_id: (await supabase.auth.getUser()).data.user?.id!,
+          user_id: user?.id!,
+          org_id: currentOrgId,
           project_id: projectId,
           task_id: taskId || null,
           description: description || null,

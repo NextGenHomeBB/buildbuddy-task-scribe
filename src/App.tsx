@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import { RequireAuth } from "@/components/RequireAuth";
 import { UserSetupProvider } from "@/components/UserSetupProvider";
 import i18n from './i18n';
@@ -24,6 +25,7 @@ import ListsHomeScreen from "./pages/ListsHomeScreen";
 import TaskListScreen from "./pages/TaskListScreen";
 import TaskHistory from "./pages/TaskHistory";
 import Timer from "./pages/Timer";
+import AcceptInvite from "./pages/AcceptInvite";
 import NotFound from "./pages/NotFound";
 import { registerOnlineListener } from "@/lib/offlineQueue";
 
@@ -53,7 +55,8 @@ const App = () => {
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <UserSetupProvider>
+          <OrganizationProvider>
+            <UserSetupProvider>
             <TooltipProvider>
               <Toaster />
               <Sonner />
@@ -110,12 +113,14 @@ const App = () => {
                   <Route path="/lists" element={<RequireAuth><ListsHomeScreen /></RequireAuth>} />
                   <Route path="/lists/:id" element={<RequireAuth><TaskListScreen /></RequireAuth>} />
                   <Route path="/history" element={<RequireAuth><TaskHistory /></RequireAuth>} />
+                  <Route path="/accept-invite/:token" element={<AcceptInvite />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
             </TooltipProvider>
-          </UserSetupProvider>
+            </UserSetupProvider>
+          </OrganizationProvider>
         </AuthProvider>
       </QueryClientProvider>
     </I18nextProvider>

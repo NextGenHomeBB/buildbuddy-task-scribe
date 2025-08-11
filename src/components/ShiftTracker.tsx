@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useOrganization } from '@/contexts/OrganizationContext'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,6 +20,7 @@ interface TimeSheet {
 
 export function ShiftTracker() {
   const { user } = useAuth()
+  const { currentOrgId } = useOrganization()
   const { toast } = useToast()
   const [isShiftActive, setIsShiftActive] = useState(false)
   const [shiftStartTime, setShiftStartTime] = useState<Date | null>(null)
@@ -85,7 +87,7 @@ export function ShiftTracker() {
   }, [user])
 
   const loadTodayHours = async () => {
-    if (!user) return
+    if (!user || !currentOrgId) return
 
     const today = new Date().toISOString().split('T')[0]
     
@@ -93,6 +95,7 @@ export function ShiftTracker() {
       .from('time_sheets')
       .select('hours')
       .eq('user_id', user.id)
+      .eq('org_id', currentOrgId)
       .eq('work_date', today)
 
     if (error) {
@@ -126,6 +129,7 @@ export function ShiftTracker() {
           .from('active_shifts')
           .insert({
             worker_id: user.id,
+            org_id: currentOrgId,
             shift_start: shiftStartTime.toISOString(),
             shift_type: 'regular'
           })
@@ -212,6 +216,7 @@ export function ShiftTracker() {
         .from('time_sheets')
         .insert({
           user_id: user.id,
+          org_id: currentOrgId,
           work_date: today,
           hours: hoursWorked,
           note: `Shift: ${shiftStartTime.toLocaleTimeString()} - ${endTime.toLocaleTimeString()}`
