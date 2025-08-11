@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from '@/components/ui/label';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { ImageCropper } from '@/components/ImageCropper';
-import { User, Mail, Calendar, Building, Edit, Save, X, Camera, Upload, Briefcase } from 'lucide-react';
+import { User, Mail, Calendar, Building, Edit, Save, X, Camera, Upload, Briefcase, ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -283,13 +283,23 @@ export default function Profile() {
   return <div className="min-h-screen bg-background pb-20 lg:pb-0">
       {/* Header */}
       <div className="bg-card border-b border-border p-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-center">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </Button>
           <img 
             src="/lovable-uploads/f8eff9bf-a328-4c88-bf0b-a0a5a85c77ec.png" 
             alt="NextGen Home" 
             className="h-8 w-auto cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => navigate('/today')}
           />
+          <div className="w-16"></div>
         </div>
       </div>
 
