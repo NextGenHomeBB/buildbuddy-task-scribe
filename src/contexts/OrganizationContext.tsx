@@ -28,14 +28,12 @@ const OrganizationContext = createContext<OrganizationContextType | undefined>(u
 export function OrganizationProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const { toast } = useToast()
-  const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
   
   const [currentOrgId, setCurrentOrgId] = useState<string | null>(null)
   const [organizations, setOrganizations] = useState<OrganizationMembership[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load organizations and set current org from URL or default
+  // Load organizations and set current org from localStorage or default
   useEffect(() => {
     if (user) {
       loadOrganizations()
@@ -44,14 +42,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     }
   }, [user])
 
-  // Update URL when current org changes
-  useEffect(() => {
-    if (currentOrgId) {
-      const newParams = new URLSearchParams(searchParams)
-      newParams.set('org', currentOrgId)
-      setSearchParams(newParams, { replace: true })
-    }
-  }, [currentOrgId])
+  // Load current org from localStorage on mount
 
   const loadOrganizations = async () => {
     if (!user) return
@@ -87,12 +78,14 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
 
       setOrganizations(memberships)
 
-      // Set current org from URL param or default to first org
-      const orgFromUrl = searchParams.get('org')
-      if (orgFromUrl && memberships.find(m => m.org_id === orgFromUrl)) {
-        setCurrentOrgId(orgFromUrl)
+      // Set current org from localStorage or default to first org
+      const savedOrgId = localStorage.getItem('currentOrgId')
+      if (savedOrgId && memberships.find(m => m.org_id === savedOrgId)) {
+        setCurrentOrgId(savedOrgId)
       } else if (memberships.length > 0) {
-        setCurrentOrgId(memberships[0].org_id)
+        const defaultOrgId = memberships[0].org_id
+        setCurrentOrgId(defaultOrgId)
+        localStorage.setItem('currentOrgId', defaultOrgId)
       }
     } catch (error) {
       console.error('Error loading organizations:', error)
@@ -110,6 +103,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     const org = organizations.find(o => o.org_id === orgId)
     if (org) {
       setCurrentOrgId(orgId)
+      localStorage.setItem('currentOrgId', orgId)
       toast({
         title: 'Organization Switched',
         description: `Switched to ${org.organization.name}`,
