@@ -112,10 +112,11 @@ export const useTimer = () => {
 
   // Start timer mutation
   const startTimerMutation = useMutation({
-    mutationFn: async ({ projectId, taskId, description }: {
+    mutationFn: async ({ projectId, taskId, description, shiftId }: {
       projectId: string;
       taskId?: string;
       description?: string;
+      shiftId?: string;
     }) => {
       // Check for existing active timer
       const { data: existingTimer } = await supabase
@@ -137,6 +138,7 @@ export const useTimer = () => {
           task_id: taskId || null,
           description: description || null,
           start_at: new Date().toISOString(),
+          shift_id: shiftId || null,
         })
         .select()
         .single();

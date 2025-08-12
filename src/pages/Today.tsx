@@ -6,7 +6,7 @@ import { useOrganization } from '@/contexts/OrganizationContext'
 import { useWorkerTasks } from '@/hooks/useWorkerTasks'
 import { TaskCard } from '@/components/TaskCard'
 import { MobileBottomNav } from '@/components/MobileBottomNav'
-import { ShiftTracker } from '@/components/ShiftTracker'
+import { WorkTimer } from '@/components/WorkTimer'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -210,9 +210,9 @@ export default function Today() {
         </div>
       </div>
 
-      {/* Shift Tracker Section */}
+      {/* Work Timer Section */}
       <div className="px-4 mb-6">
-        <ShiftTracker />
+        <WorkTimer />
       </div>
 
       {/* Tasks Section */}

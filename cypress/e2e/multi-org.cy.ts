@@ -27,14 +27,15 @@ describe('Multi-Organization Flow', () => {
     // Refresh to load with organization
     cy.reload()
     
-    // Should now show the today page with shift tracker
-    cy.contains('Shift Tracker').should('be.visible')
-    cy.contains('Start Shift').should('be.visible')
+    // Should now show the today page with work timer
+    cy.contains('Work Timer').should('be.visible')
+    cy.contains('Clock In').should('be.visible')
     
     // Test shift tracking
     cy.get('[data-testid="start-shift-button"]').click()
     cy.contains('Active').should('be.visible')
-    cy.contains('End Shift').should('be.visible')
+    cy.contains('Clock Out').should('be.visible')
+    cy.contains('Start Project Timer').should('be.visible')
     
     // End shift
     cy.get('[data-testid="end-shift-button"]').click()
