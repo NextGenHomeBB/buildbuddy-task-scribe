@@ -19,6 +19,8 @@ interface WorkerTask {
   start_date?: string  // include start_date for filtering
   end_date?: string
   project_id?: string
+  project_name?: string  // from joined projects table
+  project_status?: string  // from joined projects table
 }
 
 export function useWorkerTasks() {
@@ -32,7 +34,7 @@ export function useWorkerTasks() {
     isLoading,
     error
   } = useQuery({
-    queryKey: ['worker-tasks', currentOrgId],
+    queryKey: ['worker-tasks', currentOrgId, user?.id],
     queryFn: async () => {
       if (!user?.id || !currentOrgId) {
         throw new Error('User not authenticated or no organization selected')
@@ -40,22 +42,33 @@ export function useWorkerTasks() {
 
       const { data, error } = await supabase
         .from('tasks')
-        .select('*')
+        .select(`
+          *,
+          projects!inner(
+            id,
+            name,
+            status
+          )
+        `)
         .eq('assignee', user.id)
         .eq('org_id', currentOrgId)
         .order('created_at', { ascending: false })
 
       if (error) throw error
       
-      // Map fields for calendar compatibility
+      // Map fields for calendar compatibility and include project info
       return data.map(task => ({
         ...task,
         due_date: task.end_date,
         assigned_worker_id: task.assignee,
-        status: task.status === 'done' ? 'completed' : 'pending'
+        status: task.status === 'done' ? 'completed' : 'pending',
+        project_name: task.projects?.name,
+        project_status: task.projects?.status
       })) as WorkerTask[]
     },
-    enabled: !!user && !!currentOrgId
+    enabled: !!user && !!currentOrgId,
+    staleTime: 1000 * 60, // 1 minute cache
+    refetchOnWindowFocus: false
   })
 
   const updateTaskStatus = useMutation({

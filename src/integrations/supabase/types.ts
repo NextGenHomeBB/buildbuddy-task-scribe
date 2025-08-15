@@ -2750,6 +2750,16 @@ export type Database = {
           payment_type: string
         }[]
       }
+      check_worker_data_consistency: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          assigned_workers_count: number
+          project_id: string
+          project_name: string
+          status: string
+          user_project_role_count: number
+        }[]
+      }
       cleanup_old_security_logs: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -3296,6 +3306,10 @@ export type Database = {
       }
       refresh_document_payment_status: {
         Args: { p_document_id: string }
+        Returns: undefined
+      }
+      repair_assigned_workers: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
       rotate_security_tokens: {
