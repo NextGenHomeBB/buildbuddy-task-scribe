@@ -2,10 +2,10 @@
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { WorkerTask } from '@/lib/supabase'
-import { useWorkerTasks } from '@/hooks/useWorkerTasks'
+import { useWorkerTasks, type WorkerTask } from '@/hooks/useWorkerTasks'
 import { TaskDetailsModal } from '@/components/TaskDetailsModal'
-import { ArrowRight, AlertTriangle, Minus, Circle } from 'lucide-react'
+import { ArrowRight, AlertTriangle, Minus, Circle, Building } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 
 interface TaskCardProps {
@@ -102,6 +102,19 @@ export function TaskCard({ task, showDueDate = false }: TaskCardProps) {
                   <p className="text-gray-600 text-sm mb-2 line-clamp-2">
                     {task.description}
                   </p>
+                )}
+                
+                {/* Project Information */}
+                {(task.project_name || task.project_status) && (
+                  <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+                    <Building className="h-3 w-3" />
+                    <span>{task.project_name}</span>
+                    {task.project_status && (
+                      <Badge variant="outline" className="text-xs py-0 px-1 h-4">
+                        {task.project_status}
+                      </Badge>
+                    )}
+                  </div>
                 )}
                 
                 <div className="flex items-center justify-between">

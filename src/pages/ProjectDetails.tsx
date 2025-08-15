@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { MobileBottomNav } from '@/components/MobileBottomNav'
 import { ArrowLeft, Calendar, MapPin, Users, Briefcase } from 'lucide-react'
+import { WorkerManagementDialog } from '@/components/WorkerManagementDialog'
+import { useProjectWorkers } from '@/hooks/useProjectWorkers'
 
 interface Project {
   id: string
@@ -24,6 +26,8 @@ interface Project {
 export default function ProjectDetails() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  
+  const { workers } = useProjectWorkers(id)
   
   const { data: project, isLoading, error } = useQuery({
     queryKey: ['project', id],
@@ -193,6 +197,46 @@ export default function ProjectDetails() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Workers Management Section */}
+        <Card className="mt-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Project Workers ({workers.length})
+              </CardTitle>
+              <WorkerManagementDialog projectId={id!} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {workers.length === 0 ? (
+              <div className="text-center py-4">
+                <Users className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground mb-3">No workers assigned to this project</p>
+                <p className="text-sm text-muted-foreground">
+                  Use the "Manage Workers" button to assign team members to this project.
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2">
+                {workers.map((worker) => (
+                  <div key={worker.id} className="flex items-center gap-3 p-3 border rounded">
+                    <div className="h-8 w-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+                      {worker.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">{worker.name}</div>
+                      {worker.email && (
+                        <div className="text-xs text-muted-foreground truncate">{worker.email}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Additional project information can be added here */}
         <Card className="mt-6">

@@ -12,7 +12,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProjectWorkers } from '@/hooks/useProjectWorkers'
-import { Plus } from 'lucide-react'
+import { ProjectSelector } from '@/components/ProjectSelector'
+import { WorkerManagementDialog } from '@/components/WorkerManagementDialog'
+import { Plus, Users } from 'lucide-react'
 import { taskValidationSchema, sanitizeText } from '@/lib/security'
 
 interface AddTaskDialogProps {
@@ -23,7 +25,7 @@ interface AddTaskDialogProps {
   projectId?: string
 }
 
-export function AddTaskDialog({ trigger, onClose, defaultListId, open: externalOpen, projectId }: AddTaskDialogProps) {
+export function AddTaskDialog({ trigger, onClose, defaultListId, open: externalOpen, projectId: initialProjectId }: AddTaskDialogProps) {
   const { t } = useTranslation()
   const [internalOpen, setInternalOpen] = useState(false)
   const [title, setTitle] = useState('')
@@ -31,9 +33,13 @@ export function AddTaskDialog({ trigger, onClose, defaultListId, open: externalO
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium')
   const [listId, setListId] = useState(defaultListId || '')
   const [assigneeId, setAssigneeId] = useState<string>('')
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(initialProjectId || '')
   const { toast } = useToast()
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  
+  // Use selected project ID if available, otherwise fall back to prop
+  const projectId = selectedProjectId || initialProjectId
   const { workers, loading: workersLoading } = useProjectWorkers(projectId)
 
   // Use external open state if provided, otherwise use internal state
@@ -88,6 +94,7 @@ export function AddTaskDialog({ trigger, onClose, defaultListId, open: externalO
       setDescription('')
       setPriority('medium')
       setAssigneeId('')
+      setSelectedProjectId('')
       setListId(defaultListId || '')
       setOpen(false)
       onClose?.()
@@ -209,6 +216,15 @@ export function AddTaskDialog({ trigger, onClose, defaultListId, open: externalO
             </Select>
           </div>
 
+          {/* Project Selector - only show if no initial project provided */}
+          {!initialProjectId && (
+            <ProjectSelector
+              value={selectedProjectId}
+              onValueChange={setSelectedProjectId}
+              placeholder="Select project (optional)"
+            />
+          )}
+
           {projectId && (
             <div className="space-y-2">
               <Label htmlFor="assignee">Assignee</Label>
@@ -228,8 +244,19 @@ export function AddTaskDialog({ trigger, onClose, defaultListId, open: externalO
                   </SelectContent>
                 </Select>
               ) : (
-                <div className="text-sm text-muted-foreground">
-                  No workers found for this project. Grant project access to users first.
+                <div className="space-y-3">
+                  <div className="text-sm text-muted-foreground">
+                    No workers found for this project.
+                  </div>
+                  <WorkerManagementDialog
+                    projectId={projectId!}
+                    trigger={
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Users className="h-4 w-4 mr-2" />
+                        Assign Workers to Project
+                      </Button>
+                    }
+                  />
                 </div>
               )}
             </div>

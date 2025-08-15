@@ -10,7 +10,8 @@ import { WorkTimer } from '@/components/WorkTimer'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Calendar, Menu, History } from 'lucide-react'
+import { Calendar, Menu, History, Plus } from 'lucide-react'
+import { AddTaskDialog } from '@/components/AddTaskDialog'
 import { useDailyTasks } from '@/hooks/useDailyTasks'
 import { DailyTaskCard } from '@/components/DailyTaskCard'
 import { OrganizationSwitcher } from '@/components/OrganizationSwitcher'
@@ -221,6 +222,14 @@ export default function Today() {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">Today's Tasks</h2>
             <div className="flex gap-2">
+              <AddTaskDialog
+                trigger={
+                  <Button variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Task
+                  </Button>
+                }
+              />
               <Button
                 variant="outline"
                 size="sm"

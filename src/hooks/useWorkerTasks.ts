@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useOrganization } from '@/contexts/OrganizationContext'
 import { enqueueMutation } from '@/lib/offlineQueue'
 
-interface WorkerTask {
+export interface WorkerTask {
   id: string
   title: string
   description?: string
