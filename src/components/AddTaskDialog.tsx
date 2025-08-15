@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { useProjectWorkers } from '@/hooks/useProjectWorkers'
 import { Plus } from 'lucide-react'
 import { taskValidationSchema, sanitizeText } from '@/lib/security'
 
@@ -19,18 +20,21 @@ interface AddTaskDialogProps {
   onClose?: () => void
   defaultListId?: string
   open?: boolean
+  projectId?: string
 }
 
-export function AddTaskDialog({ trigger, onClose, defaultListId, open: externalOpen }: AddTaskDialogProps) {
+export function AddTaskDialog({ trigger, onClose, defaultListId, open: externalOpen, projectId }: AddTaskDialogProps) {
   const { t } = useTranslation()
   const [internalOpen, setInternalOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium')
   const [listId, setListId] = useState(defaultListId || '')
+  const [assigneeId, setAssigneeId] = useState<string>('')
   const { toast } = useToast()
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const { workers, loading: workersLoading } = useProjectWorkers(projectId)
 
   // Use external open state if provided, otherwise use internal state
   const open = externalOpen !== undefined ? externalOpen : internalOpen
@@ -41,31 +45,17 @@ export function AddTaskDialog({ trigger, onClose, defaultListId, open: externalO
     setInternalOpen
 
   const createTaskMutation = useMutation({
-    mutationFn: async (taskData: { title: string; description?: string; priority: string }) => {
+    mutationFn: async (taskData: { title: string; description?: string; priority: string; assigneeId?: string }) => {
       console.log('Creating task with data:', taskData)
-      console.log('Current user:', user?.id)
       
-      // First, let's get a project for this user
-      const { data: userProjectRole, error: projectError } = await supabase
-        .from('user_project_role')
-        .select('project_id')
-        .eq('user_id', user?.id)
-        .limit(1)
-        .single()
-
-      if (projectError) {
-        console.error('Project lookup error:', projectError)
-        // If no project found, create task without project initially
-      }
-
       const taskToInsert = {
         title: taskData.title,
         description: taskData.description || null,
         priority: taskData.priority,
-        assignee: user?.id,
+        assignee: taskData.assigneeId || user?.id,
         status: 'todo',
-        project_id: userProjectRole?.project_id || null,
-        phase_id: null, // We can add phase selection later
+        project_id: projectId || null,
+        phase_id: null,
         list_id: listId || null,
       }
 
@@ -97,6 +87,7 @@ export function AddTaskDialog({ trigger, onClose, defaultListId, open: externalO
       setTitle('')
       setDescription('')
       setPriority('medium')
+      setAssigneeId('')
       setListId(defaultListId || '')
       setOpen(false)
       onClose?.()
@@ -155,7 +146,8 @@ export function AddTaskDialog({ trigger, onClose, defaultListId, open: externalO
     const sanitizedData = {
       title: sanitizeText(validation.data.title),
       description: validation.data.description ? sanitizeText(validation.data.description) : undefined,
-      priority: validation.data.priority
+      priority: validation.data.priority,
+      assigneeId: assigneeId
     }
 
     createTaskMutation.mutate(sanitizedData)
@@ -216,6 +208,32 @@ export function AddTaskDialog({ trigger, onClose, defaultListId, open: externalO
               </SelectContent>
             </Select>
           </div>
+
+          {projectId && (
+            <div className="space-y-2">
+              <Label htmlFor="assignee">Assignee</Label>
+              {workersLoading ? (
+                <div className="text-sm text-muted-foreground">Loading workers...</div>
+              ) : workers.length > 0 ? (
+                <Select value={assigneeId} onValueChange={setAssigneeId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select assignee (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {workers.map((worker) => (
+                      <SelectItem key={worker.id} value={worker.id}>
+                        {worker.name} {worker.email && `(${worker.email})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  No workers found for this project. Grant project access to users first.
+                </div>
+              )}
+            </div>
+          )}
           
           <div className="flex gap-2 pt-4">
             <Button
