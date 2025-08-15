@@ -277,7 +277,7 @@ export function WorkerManagementDialog({ projectId, trigger }: WorkerManagementD
                 className="w-full"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                {addWorkersMutation.isPending ? 'Adding...' : `Add ${selectedUsers.length} Worker(s)`}
+                {addWorkersMutation.isPending ? 'Adding...' : `Assign ${selectedUsers.length} Worker(s)`}
               </Button>
             </CardContent>
           </Card>
