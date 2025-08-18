@@ -107,7 +107,7 @@ export class RateLimiter {
 export const authRateLimiter = new RateLimiter(5, 15 * 60 * 1000) // 5 attempts per 15 minutes
 export const taskCreationLimiter = new RateLimiter(10, 5 * 60 * 1000) // 10 tasks per 5 minutes
 export const taskUpdateLimiter = new RateLimiter(20, 5 * 60 * 1000) // 20 task updates per 5 minutes
-export const profileUpdateLimiter = new RateLimiter(5, 10 * 60 * 1000) // 5 profile updates per 10 minutes
+export const profileUpdateLimiter = new RateLimiter(15, 5 * 60 * 1000) // 15 profile updates per 5 minutes
 export const taskListLimiter = new RateLimiter(5, 5 * 60 * 1000) // 5 list operations per 5 minutes
 export const roleChangeLimiter = new RateLimiter(3, 60 * 60 * 1000) // 3 role changes per hour
 
@@ -151,8 +151,8 @@ export const validateOperation = async (operation: string, userId: string): Prom
       const { supabase } = await import('@/lib/supabase')
       const { data } = await supabase.rpc('check_rate_limit', {
         operation_name: operation,
-        max_attempts: operation === 'role_change' ? 3 : 5,
-        window_minutes: operation === 'role_change' ? 60 : 10
+        max_attempts: operation === 'role_change' ? 3 : 15,
+        window_minutes: operation === 'role_change' ? 60 : 5
       })
       
       if (!data) {
