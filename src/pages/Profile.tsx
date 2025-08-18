@@ -107,15 +107,42 @@ export default function Profile() {
     if (!user) return;
 
     // Check rate limiting before proceeding
-    const { validateOperation } = await import('@/lib/security')
+    const { validateOperation, profileUpdateLimiter } = await import('@/lib/security')
     const isAllowed = await validateOperation('profile_update', user.id)
     
     if (!isAllowed) {
+      const remainingTime = profileUpdateLimiter.getRemainingTime(`profile_update:${user.id}`)
+      const remainingMinutes = Math.ceil(remainingTime / (1000 * 60))
+      const attemptCount = profileUpdateLimiter.getAttemptCount(`profile_update:${user.id}`)
+      
       toast({
         title: 'Rate limit exceeded',
-        description: 'Please wait before updating your profile again',
+        description: `Too many profile updates (${attemptCount}/30). Please wait ${remainingMinutes} minutes before trying again, or refresh the page to reset.`,
         variant: 'destructive',
       })
+      
+      // Show a separate toast with clear option after a brief delay
+      setTimeout(() => {
+        toast({
+          title: 'Need to retry?',
+          description: 'Click here to clear the rate limit and try again.',
+          action: (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => {
+                profileUpdateLimiter.clearAttempts(`profile_update:${user.id}`)
+                toast({
+                  title: 'Rate limit cleared',
+                  description: 'You can now try updating your profile again.',
+                })
+              }}
+            >
+              Clear & Retry
+            </Button>
+          )
+        })
+      }, 2000)
       return
     }
 
