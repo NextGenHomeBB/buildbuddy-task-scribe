@@ -117,32 +117,24 @@ export default function Profile() {
       
       toast({
         title: 'Rate limit exceeded',
-        description: `Too many profile updates (${attemptCount}/30). Please wait ${remainingMinutes} minutes before trying again, or refresh the page to reset.`,
+        description: `Too many profile updates (${attemptCount}/100). Please wait ${remainingMinutes} minutes before trying again.`,
         variant: 'destructive',
+        action: (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => {
+              profileUpdateLimiter.clearAttempts(`profile_update:${user.id}`)
+              toast({
+                title: 'Rate limit cleared',
+                description: 'You can now try updating your profile again.',
+              })
+            }}
+          >
+            Clear & Retry
+          </Button>
+        )
       })
-      
-      // Show a separate toast with clear option after a brief delay
-      setTimeout(() => {
-        toast({
-          title: 'Need to retry?',
-          description: 'Click here to clear the rate limit and try again.',
-          action: (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={() => {
-                profileUpdateLimiter.clearAttempts(`profile_update:${user.id}`)
-                toast({
-                  title: 'Rate limit cleared',
-                  description: 'You can now try updating your profile again.',
-                })
-              }}
-            >
-              Clear & Retry
-            </Button>
-          )
-        })
-      }, 2000)
       return
     }
 
